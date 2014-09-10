@@ -1,0 +1,1 @@
+CMakeLists.txt + builds/cmake/modules/testzmqversion.cmake builds/cmake/modules/zmqsourcerunchecks.cmake builds/cmake/platform.hpp.in src/version.rc.in src/libzmq.pc.cmake.in

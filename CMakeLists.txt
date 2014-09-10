@@ -1,5 +1,10 @@
 # CMake build script for ZeroMQ
 
+IF(BIICODE)
+  INCLUDE(${CMAKE_HOME_DIRECTORY}/biicode.cmake)
+  INIT_BIICODE_BLOCK()
+ENDIF()
+
 cmake_minimum_required(VERSION 2.8)
 project(ZeroMQ)
 
@@ -575,69 +580,102 @@ endif()
 #-----------------------------------------------------------------------------
 # output
 
-if(MSVC)
-  add_library(libzmq SHARED ${sources} ${public_headers} ${html-docs} ${readme-docs} ${CMAKE_CURRENT_BINARY_DIR}/NSIS.template.in)
-  target_link_libraries(libzmq ${OPTIONAL_LIBRARIES})
-  set_target_properties(libzmq PROPERTIES
-    PUBLIC_HEADER "${public_headers}"
-    RELEASE_POSTFIX "${_zmq_COMPILER}-mt-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
-    DEBUG_POSTFIX "${_zmq_COMPILER}-mt-gd-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
-  add_library(libzmq-static STATIC ${sources})
-  set_target_properties(libzmq-static PROPERTIES
-    PUBLIC_HEADER "${public_headers}"
-    RELEASE_POSTFIX "${_zmq_COMPILER}-mt-s-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
-    DEBUG_POSTFIX "${_zmq_COMPILER}-mt-sgd-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
-    COMPILE_FLAGS "/D ZMQ_STATIC"
-    OUTPUT_NAME "libzmq")
-else()
-    add_library(libzmq SHARED ${sources} ${public_headers} ${html-docs} ${readme-docs} ${zmq-pkgconfig})
-    if(ZMQ_BUILD_FRAMEWORK)
-      set_target_properties(libzmq PROPERTIES
-                            FRAMEWORK TRUE
-                            OUTPUT_NAME "ZeroMQ"
-                            PUBLIC_HEADER "${public_headers}"
-                            MACOSX_FRAMEWORK_IDENTIFIER "org.zeromq.libzmq"
-                            MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${ZMQ_VERSION}
-                            MACOSX_FRAMEWORK_BUNDLE_VERSION ${ZMQ_VERSION}
-                            VERSION ${ZMQ_VERSION}
-                            SOVERSION "${ZMQ_VERSION_MAJOR}.${ZMQ_VERSION_MINOR}.0")
-      set_source_files_properties(${html-docs} PROPERTIES
-                                  MACOSX_PACKAGE_LOCATION doc)
-      set_source_files_properties(${readme-docs} PROPERTIES
-                                  MACOSX_PACKAGE_LOCATION etc)
-      set_source_files_properties(${zmq-pkgconfig} PROPERTIES
-                                  MACOSX_PACKAGE_LOCATION lib/pkgconfig)
-    else()
-      set_target_properties(libzmq PROPERTIES
-                             OUTPUT_NAME "zmq"
-                             PUBLIC_HEADER "${public_headers}")
-    endif()
-    add_library(libzmq-static STATIC ${sources} ${public_headers} ${html-docs} ${readme-docs} ${zmq-pkgconfig})
+
+IF(BIICODE)
+  IF(WIN32 AND BII_BLOCK_EXES)
+    list(REMOVE_ITEM BII_BLOCK_EXES builds_zos_test_fork
+                                    tests_test_fork
+                                    tests_test_monitor
+                                    tests_test_pair_ipc
+                                    tests_test_reqrep_ipc
+                                    tests_test_abstract_ipc
+                                    tests_test_proxy
+                                    tests_test_filter_ipc
+                                    tests_test_connect_delay_tipc
+                                    tests_test_shutdown_stress_tipc
+                                    tests_test_term_endpoint_tipc
+                                    tests_test_router_mandatory_hwm
+                                    )
+  ENDIF()
+
+  ADD_BIICODE_TARGETS()
+  target_include_directories(${BII_LIB_TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  if(MSVC)
+    target_compile_definitions(${BII_LIB_TARGET} PUBLIC -DWIN32
+                                                        -DDLL_EXPORT
+                                                        # NB: May require tweaking for highly connected applications.
+                                                        -DFD_SETSIZE=1024
+                                                        -D_CRT_SECURE_NO_WARNINGS)
+  endif()
+
+  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+    ADD_SUBDIRECTORY(tests)
+  endif()
+ 
+ELSE()
+  if(MSVC)
+    add_library(libzmq SHARED ${sources} ${public_headers} ${html-docs} ${readme-docs} ${CMAKE_CURRENT_BINARY_DIR}/NSIS.template.in)
+    target_link_libraries(libzmq ${OPTIONAL_LIBRARIES})
+    set_target_properties(libzmq PROPERTIES
+      PUBLIC_HEADER "${public_headers}"
+      RELEASE_POSTFIX "${_zmq_COMPILER}-mt-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
+      DEBUG_POSTFIX "${_zmq_COMPILER}-mt-gd-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
+      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
+    add_library(libzmq-static STATIC ${sources})
     set_target_properties(libzmq-static PROPERTIES
       PUBLIC_HEADER "${public_headers}"
-      COMPILE_FLAGS "-DZMQ_STATIC"
-      OUTPUT_NAME "zmq-static")
-endif()
+      RELEASE_POSTFIX "${_zmq_COMPILER}-mt-s-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
+      DEBUG_POSTFIX "${_zmq_COMPILER}-mt-sgd-${ZMQ_VERSION_MAJOR}_${ZMQ_VERSION_MINOR}_${ZMQ_VERSION_PATCH}"
+      COMPILE_FLAGS "/D ZMQ_STATIC"
+      OUTPUT_NAME "libzmq")
+  else()
+      add_library(libzmq SHARED ${sources} ${public_headers} ${html-docs} ${readme-docs} ${zmq-pkgconfig})
+      if(ZMQ_BUILD_FRAMEWORK)
+        set_target_properties(libzmq PROPERTIES
+                              FRAMEWORK TRUE
+                              OUTPUT_NAME "ZeroMQ"
+                              PUBLIC_HEADER "${public_headers}"
+                              MACOSX_FRAMEWORK_IDENTIFIER "org.zeromq.libzmq"
+                              MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${ZMQ_VERSION}
+                              MACOSX_FRAMEWORK_BUNDLE_VERSION ${ZMQ_VERSION}
+                              VERSION ${ZMQ_VERSION}
+                              SOVERSION "${ZMQ_VERSION_MAJOR}.${ZMQ_VERSION_MINOR}.0")
+        set_source_files_properties(${html-docs} PROPERTIES
+                                    MACOSX_PACKAGE_LOCATION doc)
+        set_source_files_properties(${readme-docs} PROPERTIES
+                                    MACOSX_PACKAGE_LOCATION etc)
+        set_source_files_properties(${zmq-pkgconfig} PROPERTIES
+                                    MACOSX_PACKAGE_LOCATION lib/pkgconfig)
+      else()
+        set_target_properties(libzmq PROPERTIES
+                               OUTPUT_NAME "zmq"
+                               PUBLIC_HEADER "${public_headers}")
+      endif()
+      add_library(libzmq-static STATIC ${sources} ${public_headers} ${html-docs} ${readme-docs} ${zmq-pkgconfig})
+      set_target_properties(libzmq-static PROPERTIES
+        PUBLIC_HEADER "${public_headers}"
+        COMPILE_FLAGS "-DZMQ_STATIC"
+        OUTPUT_NAME "zmq-static")
+  endif()
 
-target_link_libraries(libzmq ${SODIUM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-if(HAVE_WS2_32)
-  target_link_libraries(libzmq ws2_32)
-elseif(HAVE_WS2)
-  target_link_libraries(libzmq ws2)
-endif()
+  target_link_libraries(libzmq ${SODIUM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+  if(HAVE_WS2_32)
+    target_link_libraries(libzmq ws2_32)
+  elseif(HAVE_WS2)
+    target_link_libraries(libzmq ws2)
+  endif()
 
-if(HAVE_RPCRT4)
-  target_link_libraries(libzmq rpcrt4)
-endif()
+  if(HAVE_RPCRT4)
+    target_link_libraries(libzmq rpcrt4)
+  endif()
 
-if(HAVE_IPHLAPI)
-  target_link_libraries(libzmq iphlpapi)
-endif()
+  if(HAVE_IPHLAPI)
+    target_link_libraries(libzmq iphlpapi)
+  endif()
 
-if(RT_LIBRARY)
-  target_link_libraries(libzmq ${RT_LIBRARY})
-endif()
+  if(RT_LIBRARY)
+    target_link_libraries(libzmq ${RT_LIBRARY})
+  endif()
 
 set(perf-tools local_lat
                remote_lat
@@ -842,3 +880,5 @@ if(MSVC_VERSION EQUAL 1600)
     file(APPEND "${ZMQ_SLN_FILENAME}" "\n# This should be regenerated!\n")
   endif()
 endif()
+
+ENDIF(BIICODE)
