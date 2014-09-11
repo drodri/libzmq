@@ -17,7 +17,7 @@ endif()
 if(WIN32)
 option(WITH_TWEETNACL "Build with tweetnacl" OFF)
 else()
-option(WITH_TWEETNACL "Build with tweetnacl" ON)
+option(WITH_TWEETNACL "Build with tweetnacl" OFF)
 endif()
 
 if(WITH_TWEETNACL)
@@ -582,9 +582,9 @@ endif()
 
 
 IF(BIICODE)
+  list(REMOVE_ITEM BII_BLOCK_EXES builds_zos_test_fork) # Not supporting ZOS
   IF(WIN32 AND BII_BLOCK_EXES)
-    list(REMOVE_ITEM BII_BLOCK_EXES builds_zos_test_fork
-                                    tests_test_fork
+    list(REMOVE_ITEM BII_BLOCK_EXES tests_test_fork
                                     tests_test_monitor
                                     tests_test_pair_ipc
                                     tests_test_reqrep_ipc
