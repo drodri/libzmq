@@ -582,9 +582,10 @@ endif()
 
 
 IF(BIICODE)
-  list(REMOVE_ITEM BII_BLOCK_EXES builds_zos_test_fork) # Not supporting ZOS
-  IF(WIN32 AND BII_BLOCK_EXES)
-    list(REMOVE_ITEM BII_BLOCK_EXES tests_test_fork
+  IF(BII_BLOCK_EXES)
+    list(REMOVE_ITEM BII_BLOCK_EXES builds_zos_test_fork) # Not supporting ZOS
+    IF(WIN32)
+      list(REMOVE_ITEM BII_BLOCK_EXES tests_test_fork
                                     tests_test_monitor
                                     tests_test_pair_ipc
                                     tests_test_reqrep_ipc
@@ -596,6 +597,7 @@ IF(BIICODE)
                                     tests_test_term_endpoint_tipc
                                     tests_test_router_mandatory_hwm
                                     )
+    ENDIF()
   ENDIF()
 
   ADD_BIICODE_TARGETS()

@@ -1,1 +1,1 @@
-CMakeLists.txt + builds/cmake/Modules/TestZMQVersion.cmake builds/cmake/Modules/ZMQSourceRunChecks.cmake builds/cmake/platform.hpp.in src/version.rc.in src/libzmq.pc.cmake.in
+CMakeLists.txt + builds/cmake/Modules/TestZMQVersion.cmake builds/cmake/Modules/ZMQSourceRunChecks.cmake builds/cmake/platform.hpp.in src/version.rc.in src/libzmq.pc.cmake.in copying copying.lesser
