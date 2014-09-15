@@ -1,6 +1,13 @@
 # ZeroMQ
 
-[![Build Status](https://travis-ci.org/zeromq/libzmq.png?branch=master)](https://travis-ci.org/zeromq/libzmq)
+This is a fork of the LibZMQ project, to share it through the biicode plaform, the biicode block is located at: http://www.biicode.com/diego/libzmq.
+
+This is ongoing work, and some improvements have to be made, specifically:
+- TweetNaCL is disable by default, as libsodium dependency is not resolved yet. I am working in uploading libsodium to biicode too.
+- Works in Mac, Win (VS 2012), and Ubuntu, both included tests as well as being reused from client-server example through the C++ binding. Further testing might be necessary, also checking other compilers as MinGW. One test fails under Win, still investigating reason.
+- Automate publish to biicode with travis-ci
+
+
 
 ## Welcome
 
